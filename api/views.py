@@ -29,3 +29,26 @@ class UserRegistrationView(APIView):
         return Response(serializer.errors, status=400)
 
 
+class UserLoginView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = DiveUser.objects.filter(username=username).first()
+        if user and user.check_password(password):
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({
+                'token': token.key
+            })
+        return Response({
+            'error': 'Invalid credentials'
+        }, status=400)
+
+
+class UserLogoutView(APIView):
+    def post(self, request):
+        request.user.auth_token.delete()
+        return Response({
+            'message': 'logout success'
+        }, status=200)
