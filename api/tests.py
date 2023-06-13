@@ -38,7 +38,7 @@ class UserRegistration(TestCase):
 class UserLogin(TestCase):
     def test_user_login(self):
         url = reverse('login')
-        DiveUser.objects.create_user(username='username', password='1234',email='')
+        DiveUser.objects.create_user(username='username', password='1234', email='useer@usermail.com')
         response = self.client.post(url, data={
             'username': 'username',
             'password': '1234',
@@ -76,7 +76,7 @@ class CrudUsers(TestCase):
         })
         self.assertEquals(manager_response.status_code, 200)
         # Test General Users
-        DiveUser.objects.create_user(username='user', password='1234',email='newuser@email.com', level='user')
+        DiveUser.objects.create_user(username='user', password='1234', email='newuser@email.com', level='user')
         login_response = self.client.post(login_url, data={
             'username': 'user',
             'password': '1234',
@@ -85,4 +85,3 @@ class CrudUsers(TestCase):
             'Authorization': f'Token {login_response.json()["token"]}'
         })
         self.assertEquals(manager_response.status_code, 403)
-
