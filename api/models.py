@@ -8,6 +8,7 @@ from django.db import models
 
 
 class DiveUser(AbstractUser):
+    email = models.EmailField(unique=True)
     USER_LEVEL_CHOICES = (
         ('admin', 'Admin'),
         ('moderator', 'Moderator'),
