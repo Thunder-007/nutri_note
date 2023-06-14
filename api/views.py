@@ -54,7 +54,7 @@ class UserLogoutView(APIView):
         request.user.auth_token.delete()
         return Response({
             'message': 'logout success'
-        }, status=status.HTTP_400_BAD_REQUEST)
+        }, status=status.HTTP_200_OK)
 
 
 class UsersManageView(APIView):

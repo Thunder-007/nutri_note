@@ -85,3 +85,25 @@ class CrudUsers(TestCase):
             'Authorization': f'Token {login_response.json()["token"]}'
         })
         self.assertEquals(manager_response.status_code, 403)
+
+
+class CrudUser(TestCase):
+    def test_get_destroy_user(self):
+        login_url = reverse('login')
+        DiveUser.objects.create_user(username='usieer', password='1234', email='thisuser@mail.com', level='user')
+        DiveUser.objects.create_user(username='moderator', password='1234', level='moderator')
+        login_response = self.client.post(login_url, data={
+            'username': 'moderator',
+            'password': '1234',
+        })
+        pk = DiveUser.objects.get(username='usieer').pk
+        user_url = reverse('manage_user', kwargs={'pk': pk})
+        manager_response = self.client.delete(user_url, headers={
+            'Authorization': f'Token {login_response.json()["token"]}'
+        })
+        try:
+            DiveUser.objects.get(pk=pk)
+            raise Exception("User not deleted")
+        except DiveUser.DoesNotExist:
+            self.assertEquals(True, True)
+        self.assertEquals(manager_response.status_code, 200)
