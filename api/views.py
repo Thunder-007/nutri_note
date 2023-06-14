@@ -7,6 +7,7 @@ from rest_framework import status
 from .models import DiveUser
 from .serializers import UserSerializer
 from .permissions import IsManager
+from rest_framework.generics import CreateAPIView
 
 
 # Create your views here.
@@ -27,7 +28,7 @@ class UserRegistrationView(APIView):
             return Response({
                 "message": "user created successfully"
             }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=400)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserLoginView(APIView):
@@ -44,7 +45,7 @@ class UserLoginView(APIView):
             })
         return Response({
             'error': 'Invalid credentials'
-        }, status=400)
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserLogoutView(APIView):
@@ -53,7 +54,7 @@ class UserLogoutView(APIView):
         request.user.auth_token.delete()
         return Response({
             'message': 'logout success'
-        }, status=200)
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UsersManageView(APIView):
@@ -64,7 +65,7 @@ class UsersManageView(APIView):
         user_serializer = UserSerializer(users, many=True)
         return Response({
             'users': user_serializer.data
-        }, status=200)
+        }, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = UserSerializer(data=request.data)
@@ -73,19 +74,49 @@ class UsersManageView(APIView):
             return Response({
                 "message": "user created successfully"
             }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=400)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserManageView(APIView):
+class UserManageView(CreateAPIView):
     permission_classes = [IsManager]
+    serializer_class = UserSerializer
 
     def get(self, request, pk=None):
-        user = DiveUser.objects.get(pk=pk, level='user')
-        user_serializer = UserSerializer(user)
-        if user_serializer:
-            return Response({
-                'user': user_serializer.data
-            }, status=200)
-        return Response({
-            'error': 'user not found'
-        }, status=400)
+        try:
+            user = DiveUser.objects.get(pk=pk, level='user')
+        except DiveUser.DoesNotExist:
+            return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = UserSerializer(user, data=request.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        try:
+            user = DiveUser.objects.get(pk=pk)
+        except DiveUser.DoesNotExist:
+            return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = UserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk=None):
+        try:
+            user = DiveUser.objects.get(pk=pk, level='user')
+        except DiveUser.DoesNotExist:
+            return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        try:
+            user = DiveUser.objects.get(pk=pk, level='user')
+        except DiveUser.DoesNotExist:
+            return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user.delete()
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import DiveUser
 from rest_framework.validators import UniqueTogetherValidator
+from django.contrib.auth.hashers import make_password
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -25,3 +26,9 @@ class UserSerializer(serializers.ModelSerializer):
             level='user'
         )
         return user
+
+    def update(self, instance, validated_data):
+        if 'password' in validated_data:
+            password = validated_data.pop('password')
+            instance.password = make_password(password)
+        return super().update(instance, validated_data)
