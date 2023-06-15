@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import DiveUser, Food
+from .models import DiveUser, Food, ReachedLimit
 from rest_framework.validators import UniqueTogetherValidator
 from django.contrib.auth.hashers import make_password
 from django.conf import settings
@@ -47,6 +47,10 @@ class FoodSerializer(serializers.ModelSerializer):
         if not validated_data.get('calories'):
             nutritionix = Nutritionix(settings.NUTRINIX_APP_ID, settings.NUTRINIX_APP_KEY)
             validated_data['calories'] = nutritionix.get_calories(validated_data['name'])
+            if validated_data['calories'] > ReachedLimit.limit:
+                user = DiveUser.objects.get(id=self.context['request'].user.id)
+                ReachedLimit.objects.create(user=user, reached=True, date=validated_data['date'],
+                                            time=validated_data['time'])
         return super().create(validated_data)
 
     def update(self, instance, validated_data):

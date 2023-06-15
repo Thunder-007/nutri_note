@@ -27,3 +27,11 @@ class Food(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ReachedLimit(models.Model):
+    limit = 1000
+    user = models.ForeignKey(DiveUser, on_delete=models.CASCADE)
+    reached = models.BooleanField(default=False)
+    date = models.DateField()
+    time = models.TimeField()
