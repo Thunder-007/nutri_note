@@ -1,5 +1,6 @@
 from django.urls import path, include
-from .views import HelloWorld, UserRegistrationView, UserLoginView, UserLogoutView, UsersManageView, UserManageView
+from .views import HelloWorld, UserRegistrationView, UserLoginView, UserLogoutView, UsersManageView, UserManageView, \
+    FoodView
 
 urlpatterns = [
     path('hello_world/', HelloWorld, name='hello_world'),
@@ -8,4 +9,5 @@ urlpatterns = [
     path('logout/', UserLogoutView.as_view(), name='logout'),
     path('manage/users/', UsersManageView.as_view(), name='manage_users'),
     path('manage/users/<int:pk>/', UserManageView.as_view(), name='manage_user'),
+    path('food/', FoodView.as_view(), name='food'),
 ]

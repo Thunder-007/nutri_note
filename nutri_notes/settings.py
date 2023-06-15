@@ -54,6 +54,10 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = 'api.DiveUser'
 
+NUTRINIX_APP_ID = os.environ.get('NUTRINIX_APP_ID')
+NUTRINIX_APP_KEY = os.environ.get('NUTRINIX_APP_KEY')
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework import status
-from .models import DiveUser
-from .serializers import UserSerializer
+from .models import DiveUser, Food
+from .serializers import UserSerializer, FoodSerializer
 from .permissions import IsManager
 from rest_framework.generics import CreateAPIView
 
@@ -120,3 +120,18 @@ class UserManageView(CreateAPIView):
         user.delete()
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class FoodView(APIView):
+
+    def get(self, request):
+        foods = Food.objects.all().filter(user=request.user)
+        food_serializer = FoodSerializer(foods, many=True)
+        return Response(food_serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = FoodSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

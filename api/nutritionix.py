@@ -27,9 +27,8 @@ class Nutritionix:
 
             if 'foods' in data:
                 first_food = data['foods'][0]
-                food_name = first_food['food_name']
                 calories = first_food['nf_calories']
-                return food_name, calories
+                return calories
             else:
                 return None
 
@@ -48,7 +47,7 @@ if __name__ == '__main__':
     result = nutritionix.get_calories(food_name)
 
     if result:
-        food_name, calories = result
+        calories = result
         print(f"Calories in {food_name}: {calories}")
     else:
         print("Food not found or error occurred.")
