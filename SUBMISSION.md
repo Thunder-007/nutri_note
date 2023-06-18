@@ -17,5 +17,14 @@ python manage.py runserver
 The api is hosted at https://nutrinote.azurewebsites.net/ as docker container uses postgres sql.
 The documentation is being done, suggestions and criticism are encouraged.
 Please email harsha@harsha07.tech to get the access for the docker instance and database vm on azure. I will create a
-azure role for the mail id. 
+azure role for the mail id.
 
+creating a new user with admin and moderator privileges
+
+```bash
+python manage.py shell
+from api.models import DiveUser
+from django.contrib.auth.models import DiveUser
+DiveUser.objects.create_user(username='moderator', password='1234', level='moderator')
+DiveUser.objects.create_user(username='administrator', password='1234', level='admin')
+```
