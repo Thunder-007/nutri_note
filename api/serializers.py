@@ -4,6 +4,7 @@ from rest_framework.validators import UniqueTogetherValidator
 from django.contrib.auth.hashers import make_password
 from django.conf import settings
 from .nutritionix import Nutritionix
+from django.db.models import Sum
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -44,18 +45,30 @@ class FoodSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'date', 'time', 'calories', 'note']
 
     def create(self, validated_data):
+        print(self.context)
         if not validated_data.get('calories'):
             nutritionix = Nutritionix(settings.NUTRINIX_APP_ID, settings.NUTRINIX_APP_KEY)
             validated_data['calories'] = nutritionix.get_calories(validated_data['name'])
-            if validated_data['calories'] > ReachedLimit.limit:
-                user = DiveUser.objects.get(id=self.context['request'].user.id)
+        if validated_data['calories'] > ReachedLimit.limit:
+            user = DiveUser.objects.get(id=self.context['request'].user.id)
+            try:
+                ReachedLimit.objects.get(user=user, date=validated_data['date'])
+            except ReachedLimit.DoesNotExist:
                 ReachedLimit.objects.create(user=user, reached=True, date=validated_data['date'],
                                             time=validated_data['time'])
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        user = DiveUser.objects.get(id=self.context['request'].user.id)
         if not validated_data.get('calories'):
             nutritionix = Nutritionix(settings.NUTRINIX_APP_ID, settings.NUTRINIX_APP_KEY)
             validated_data['calories'] = nutritionix.get_calories(validated_data['name'])
-            print(validated_data)
-        return super().update(instance, validated_data)
+        total_calories = Food.objects.filter(user=user).aggregate(total_calories=Sum('calories'))['total_calories']
+        if total_calories + validated_data['calories'] > ReachedLimit.limit:
+            try:
+                ReachedLimit.objects.get(user=user, date=validated_data['date'])
+            except ReachedLimit.DoesNotExist:
+                ReachedLimit.objects.create(user=user, reached=True, date=validated_data['date'],
+                                            time=validated_data['time'])
+        if total_calories + validated_data['calories'] > ReachedLimit.limit:
+            return super().update(instance, validated_data)

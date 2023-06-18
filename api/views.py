@@ -6,7 +6,7 @@ from rest_framework import permissions
 from rest_framework import status
 from .models import DiveUser, Food
 from .serializers import UserSerializer, FoodSerializer
-from .permissions import IsManager
+from .permissions import IsManager, IsAdmin
 from rest_framework.generics import CreateAPIView
 
 
@@ -122,16 +122,66 @@ class UserManageView(CreateAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class FoodView(APIView):
-
+class FoodView(CreateAPIView):
     def get(self, request):
         foods = Food.objects.all().filter(user=request.user)
         food_serializer = FoodSerializer(foods, many=True)
         return Response(food_serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        serializer = FoodSerializer(data=request.data)
+        serializer = FoodSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        pk = request.data.get('id')
+        try:
+            food = Food.objects.get(pk=pk, user=request.user)
+        except Food.DoesNotExist:
+            return Response({'message': 'Food not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = FoodSerializer(food, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        pk = request.data.get('id')
+        try:
+            food = Food.objects.get(pk=pk, user=request.user)
+        except Food.DoesNotExist:
+            return Response({'message': 'Food not found'}, status=status.HTTP_404_NOT_FOUND)
+        food.delete()
+        serializer = FoodSerializer(food)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AdminFoodView(CreateAPIView):
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        foods = Food.objects.all()
+        food_serializer = FoodSerializer(foods, many=True)
+        return Response(food_serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        try:
+            food = Food.objects.get(pk=pk)
+        except Food.DoesNotExist:
+            return Response({'message': 'Food not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = FoodSerializer(food, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        try:
+            food = Food.objects.get(pk=pk)
+        except Food.DoesNotExist:
+            return Response({'message': 'Food not found'}, status=status.HTTP_404_NOT_FOUND)
+        food.delete()
+        serializer = FoodSerializer(food)
+        return Response(serializer.data, status=status.HTTP_200_OK)

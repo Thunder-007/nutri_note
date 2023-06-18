@@ -6,3 +6,10 @@ class IsManager(permissions.BasePermission):
         if request.user.is_anonymous:
             return False
         return request.user.level == 'moderator' or request.user.level == 'admin'
+
+
+class IsAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_anonymous:
+            return False
+        return request.user.level == 'admin'

@@ -15,9 +15,30 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
+from django.urls import path, include
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework import permissions
+from django.shortcuts import HttpResponse
+
+# from rest_framework_swagger.views import get_swagger_view
+
+# schema_view = get_swagger_view(title='Nutri Notes API')
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Nutri Notes API",
+        default_version='v1',
+        description="Nutri Notes API",
+    ),
+    public=True,
+    permission_classes=[permissions.AllowAny],
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
+    path('', lambda request: HttpResponse(
+        '<H1>UP</H1> <a href="https://www.postman.com/altimetry-engineer-29032407/workspace/divehq-workspace/request/25996910-351aa365-56cf-4120-852e-75a5029af966">Postman tests and docs</a>')),
+    path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
